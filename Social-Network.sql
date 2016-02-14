@@ -37,4 +37,39 @@ where ID not in (select ID1 from Likes)
 and ID not in (select ID2 from Likes)
 order by grade, name;
 
+--Q5 For every situation where student A likes student B, but we have no information about whom B likes, return A and B's names and grades. 
+select distinct One.name, One.grade, Two.name, Two.grade from Highschooler One,  Highschooler Two,
+(select ID1,ID2 from Likes where ID2 not in
+(select ID1 from Likes)) as A
+where One.ID = A.ID1
+and Two.ID = A.ID2;
+
+--Q6 Find names and grades of students who only have friends in the same grade. 
+--Return the result sorted by grade, then by name within each grade. 
+select distinct One.name, One.grade from Highschooler One, Highschooler Two, Friend
+where One.ID =  Friend.ID1 and Two.ID = Friend.ID2
+and One.grade = Two.grade
+except
+select distinct One.name, One.grade from Highschooler One, Highschooler Two, Friend
+where One.ID =  Friend.ID1 and Two.ID = Friend.ID2 and One.grade <> Two.grade
+order by 2,1;
+
+--Q7 For each student A who likes a student B where the two are not friends, find if they have a friend C in common 
+--For all such trios, return the name and grade of A, B, and C. 
+select distinct Student1.name, Student1.grade, Student2.name, Student2.grade, Student3.name, Student3.grade
+from Highschooler Student1, Likes, Highschooler Student2, Highschooler Student3, Friend FOne, Friend FTwo
+where Student1.ID = Likes.ID1 and Likes.ID2 = Student2.ID and
+  Student2.ID not in (select ID2 from Friend where ID1 = Student1.ID) and
+  Student1.ID = FOne.ID1 and FOne.ID2 = Student3.ID and
+  Student3.ID = FTwo.ID1 and FTwo.ID2 = Student2.ID;
+  
+  --Q8 Find the difference between the number of students in the school and the number of different first names. 
+  select A.a - B.b from
+(select count(distinct ID) as a from Highschooler) as A,
+(select count(distinct name) as b from Highschooler) as B;
+
+--Q9 Find the name and grade of all students who are liked by more than one other student. 
+select name, grade from 
+(select ID2, count(ID2) as Liked from Likes group by ID2) as A, Highschooler
+where A.ID2 = ID and A.Liked > 1;
 
